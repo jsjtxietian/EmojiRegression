@@ -5,9 +5,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class DropMe : MonoBehaviour, IDropHandler
+public class DropMeArrow : MonoBehaviour, IDropHandler
 {
-    public Dictionary<int,float> CurrentEmojis = new Dictionary<int, float>();
+    public Controller Controller;
+
+    void Start()
+    {
+        Controller = GameObject.Find("Controller").GetComponent<Controller>();
+    }
 
     public void OnDrop(PointerEventData data)
     {
@@ -15,19 +20,14 @@ public class DropMe : MonoBehaviour, IDropHandler
         if (dropSprite != null)
         {
             var originalObj = data.pointerDrag;
-
-            GameObject newOne = new GameObject("EmojiDropped");
-            var img = newOne.AddComponent<Image>();
-            img.sprite = dropSprite;
-            img.SetNativeSize();
-            newOne.transform.SetParent(gameObject.transform);
-
+            int index = Int32.Parse(originalObj.name);
             Vector3 globalMousePos;
             if (RectTransformUtility.ScreenPointToWorldPointInRectangle(originalObj.GetComponent<RectTransform>(),
                 data.position, data.pressEventCamera, out globalMousePos))
             {
-                CurrentEmojis.Add(Int32.Parse(img.sprite.name),GetX(globalMousePos.x));
-                newOne.transform.position = new Vector3(globalMousePos.x, 540, 0);
+                Controller.EmojiAxisDatas.Add(new EmojiAxisData(
+                    dropSprite, globalMousePos.x, index,GetX(globalMousePos.x)));
+                Controller.UpdateAxisView();
             }
         }
     }
@@ -35,6 +35,7 @@ public class DropMe : MonoBehaviour, IDropHandler
     private Sprite GetDropSprite(PointerEventData data)
     {
         var originalObj = data.pointerDrag;
+
         if (originalObj == null)
             return null;
 
@@ -49,6 +50,7 @@ public class DropMe : MonoBehaviour, IDropHandler
         return srcImage.sprite;
     }
 
+
     public float GetX(float worldX)
     {
         var pos = gameObject.transform.position;
@@ -56,7 +58,7 @@ public class DropMe : MonoBehaviour, IDropHandler
         var minX = pos.x - width / 2;
         var maxX = pos.x + width / 2;
 
-        float x = (worldX - minX) / (maxX - minX) ;
+        float x = (worldX - minX) / (maxX - minX);
         return x;
     }
 
@@ -69,5 +71,24 @@ public class DropMe : MonoBehaviour, IDropHandler
 
         float result = x * (maxX - minX) + minX;
         return result;
+    }
+}
+
+public class EmojiAxisData
+{
+    public Sprite sprite;
+    public int label;
+    public float posX;
+    public int index;
+    public float floatLabel;
+
+    public EmojiAxisData(
+        Sprite _sprite, float _x, int _index , float _floatLabel)
+    {
+        sprite = _sprite;
+        posX = _x;
+        label = Int32.Parse(sprite.name);
+        index = _index;
+        floatLabel = _floatLabel;
     }
 }

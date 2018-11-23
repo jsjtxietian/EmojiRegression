@@ -8,105 +8,179 @@ using UnityEngine.UI;
 
 public class Controller : MonoBehaviour
 {
-    public Button TrainButton;
-    public Button TestButton;
-    public DropMe Axis;
-    public GameObject TrainingUI;
-    public float TrainTime;
+    public DropMeArrow DropMeArrow;
+    public GameObject EmojiAxisPrefabs;
+    public EmojiAdder EmojiAdder;
+    public List<EmojiAxisData> EmojiAxisDatas = new List<EmojiAxisData>();
 
-    public Image TestImage;
-
-    // Use this for initialization
-    void Start()
+    public void UpdateAxisView()
     {
-        TrainButton.onClick.AddListener(TrainMethod);
-        TestButton.onClick.AddListener(TestMethod);
-    }
+        DestoryAllChild(TestImageFather);
 
-    // Update is called once per frame
-    void Update()
-    {
-    }
-
-    public void TrainMethod()
-    {
-        TrainingUI.SetActive(true);
-        var handler = TrainingUI.transform.GetChild(2).gameObject.GetComponent<Text>()
-            .DOText("·············", TrainTime);
-        handler.OnComplete((() =>
+        //destory all axis emoji
+        for (int i = 0; i < DropMeArrow.transform.childCount; i++)
         {
-            TrainingUI.transform.GetChild(3).gameObject.SetActive(true);
-            StartCoroutine(DisappearTraining());
-        }));
+            Destroy(DropMeArrow.transform.GetChild(i).gameObject);
+        }
+
+        HashSet<int> trainInts = new HashSet<int>();
+
+        //add emoji to axis
+        foreach (var data in EmojiAxisDatas)
+        {
+            GameObject newOne = Instantiate(EmojiAxisPrefabs);
+            var childImage = newOne.transform.GetChild(1).gameObject.GetComponent<Image>();
+            childImage.sprite = data.sprite;
+            newOne.transform.position = new Vector3(data.posX, DropMeArrow.transform.position.y, 0);
+            newOne.transform.SetParent(DropMeArrow.transform);
+            trainInts.Add(data.index);
+        }
+
+        //set rect left state
+        for (int i = 0; i < EmojiAdder.DraggableEmojis.Count; i++)
+        {
+            if (trainInts.Add(i) == false)
+            {
+                EmojiAdder.DraggableEmojis[i].State = State.Train;
+            }
+            else
+            {
+                EmojiAdder.DraggableEmojis[i].State = State.Unused;
+            }
+        }
+
+        EmojiAdder.UpdateLeftArea();
+
+        TestMask.SetActive(true);
     }
 
-    private IEnumerator DisappearTraining()
+    private void DestoryAllChild(Transform father)
     {
-        yield return new WaitForSeconds(TrainTime);
+        for (int i = 0; i < father.childCount; i++)
+        {
+            Destroy(father.GetChild(i).gameObject); 
+        }
+    }
+
+    #region UpButton
+
+    public void Redo()
+    {
+        if (EmojiAxisDatas.Count > 0)
+        {
+            EmojiAxisDatas.RemoveAt(EmojiAxisDatas.Count - 1);
+            UpdateAxisView();
+        }
+    }
+
+    public void Reset()
+    {
+        EmojiAxisDatas.Clear();
+        UpdateAxisView();
+    }
+
+    public GameObject TestMask;
+    public GameObject TrainingUI;
+    public float TrainingTime;
+
+    public void Train()
+    {
+        if (EmojiAxisDatas.Count >= 2)
+        {
+            TestMask.SetActive(false);
+            TrainingUI.SetActive(true);
+            var text = TrainingUI.transform.GetChild(2).gameObject.GetComponent<Text>();
+            text.text = "";
+            text.DOText("......", TrainingTime);
+            StartCoroutine(EndTrain());
+        }
+    }
+
+    public IEnumerator EndTrain()
+    {
+        yield return new WaitForSeconds(TrainingTime);
         TrainingUI.SetActive(false);
     }
 
-    public void TestMethod()
+    #endregion
+
+
+    #region Test
+
+    public Button TestButton;
+    public Image TestImage;
+    public GameObject EmojiTest;
+    public Transform TestImageFather;
+
+    public void Test()
     {
-        GameObject FlyObject = new GameObject("FlyingEmoji");
-        var img = FlyObject.AddComponent<Image>();
-        img.sprite = TestImage.sprite;
+        if (TestImage.sprite != null && EmojiAxisDatas.Count > 1)
+        {
+            int TestLabel = Int32.Parse(TestImage.sprite.name);
 
-        img.SetNativeSize();
-        FlyObject.transform.SetParent(Axis.transform);
+            GameObject FlyObject = Instantiate(EmojiTest);
+            FlyObject.transform.GetChild(1).gameObject.GetComponent<Image>().sprite = TestImage.sprite;
+            FlyObject.transform.SetParent(TestImageFather);
 
-        int index = Int32.Parse(img.sprite.name);
-        FlyObject.transform.position = TestImage.transform.position;
-        Vector3 newPos = new Vector3(GetXByIndex(index), 540, 0);
-        FlyObject.transform.DOMove(newPos, TrainTime);
+            float finalX = CalcTestX(TestLabel);
+            FlyObject.transform.position = TestImage.transform.position;
+            Vector3 newPos = new Vector3(finalX, 770, 0);
+            var handle = FlyObject.transform.DOMove(newPos, TrainingTime);
+            handle.onComplete = () =>
+            {
+                FlyObject.transform.GetChild(0).gameObject.SetActive(true);
+                FlyObject.transform.GetChild(2).gameObject.SetActive(true);
+                int index = TestImage.gameObject.GetComponent<DropMEBySprite>().CurrentIndex;
+                EmojiAdder.DraggableEmojis[index].State = State.Test;
+                EmojiAdder.UpdateLeftArea();
+            };
+
+            TestImage.color = new Color(1, 1, 1, 0);
+        }
     }
 
-    public float GetXByIndex(int i)
+    public float CalcTestX(int label)
     {
         double[] arrX = new double[20];
         double[] arrY = new double[20];
         int len = 0;
 
-        foreach (var v in Axis.CurrentEmojis)
+        foreach (var v in EmojiAxisDatas)
         {
-            arrX[len] = v.Key;
-            arrY[len] = v.Value;
+            arrX[len] = v.label;
+            arrY[len] = v.floatLabel;
             len++;
         }
 
-        double[] Para = MultiLine(arrX, arrY, len, len-1);
-        float result =(float) GetResultY(Para, i,len-1);
+        double[] Para = MultiLine(arrX, arrY, len, len - 1);
+        float result = (float) GetResultFloatLabel(Para, label, len - 1);
 
-        result = Axis.GetWorldX(result);
+        result = DropMeArrow.GetWorldX(result);
 
-        return (float)result;
+        return (float) result;
     }
 
-    private double GetResultY(double[] Para , int index , int len)
+    private double GetResultFloatLabel(double[] Para, int label, int len)
     {
         double result = 0.0;
 
-        for (; len >= 0 ; len--)
+        for (; len >= 0; len--)
         {
-            result += Para[len] * Math.Pow(index, len);
+            result += Para[len] * Math.Pow(label, len);
         }
 
-        if (result > 1.1)
-        {
-            result = 1.1;
-        }
-        if (result < -0.1)
-        {
-            result = -0.1;
-        }
-
+        if (result > 1.0)
+            result = 1.0;
+        if (result < 0.0)
+            result = 0.0;
         return result;
     }
 
+    #endregion
 
-#region Gaussion
+    #region Gaussion
 
-    public static double[] MultiLine(double[] arrX, double[] arrY, int length, int dimension) 
+    public static double[] MultiLine(double[] arrX, double[] arrY, int length, int dimension)
     {
         int n = dimension + 1; //dimension次方程需要求 dimension+1个 系数
         double[,] Guass = new double[n, n + 1]; //高斯矩阵 例如：y=a0+a1*x+a2*x*x
@@ -209,5 +283,5 @@ public class Controller : MonoBehaviour
         return x;
     } //返回值是函数的系数
 
-#endregion
+    #endregion
 }

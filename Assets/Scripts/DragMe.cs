@@ -6,76 +6,76 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Image))]
 public class DragMe : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-	private Dictionary<int,GameObject> m_DraggingIcons = new Dictionary<int, GameObject>();
-	private Dictionary<int, RectTransform> m_DraggingPlanes = new Dictionary<int, RectTransform>();
+    private Dictionary<int, GameObject> m_DraggingIcons = new Dictionary<int, GameObject>();
+    private Dictionary<int, RectTransform> m_DraggingPlanes = new Dictionary<int, RectTransform>();
 
-	public void OnBeginDrag(PointerEventData eventData)
-	{
-		var canvas = FindInParents<Canvas>(gameObject);
-		if (canvas == null)
-			return;
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        var canvas = FindInParents<Canvas>(gameObject);
+        if (canvas == null)
+            return;
 
-		// We have clicked something that can be dragged.
-		// What we want to do is create an icon for this.
-		m_DraggingIcons[eventData.pointerId] = new GameObject("icon");
+        // We have clicked something that can be dragged.
+        // What we want to do is create an icon for this.
+        m_DraggingIcons[eventData.pointerId] = new GameObject(gameObject.transform.parent.gameObject.GetComponent<EmojiController>().Index.ToString());
 
-		m_DraggingIcons[eventData.pointerId].transform.SetParent (canvas.transform, false);
-		m_DraggingIcons[eventData.pointerId].transform.SetAsLastSibling();
-		
-		var image = m_DraggingIcons[eventData.pointerId].AddComponent<Image>();
-		// The icon will be under the cursor.
-		// We want it to be ignored by the event system.
-		var group = m_DraggingIcons[eventData.pointerId].AddComponent<CanvasGroup>();
-		group.blocksRaycasts = false;
+        m_DraggingIcons[eventData.pointerId].transform.SetParent(canvas.transform, false);
+        m_DraggingIcons[eventData.pointerId].transform.SetAsLastSibling();
 
-		image.sprite = GetComponent<Image>().sprite;
-		image.SetNativeSize();
-		
-			m_DraggingPlanes[eventData.pointerId]  = canvas.transform as RectTransform;
-		
-		SetDraggedPosition(eventData);
-	}
+        var image = m_DraggingIcons[eventData.pointerId].AddComponent<Image>();
+        // The icon will be under the cursor.
+        // We want it to be ignored by the event system.
+        var group = m_DraggingIcons[eventData.pointerId].AddComponent<CanvasGroup>();
+        group.blocksRaycasts = false;
 
-	public void OnDrag(PointerEventData eventData)
-	{
-		if (m_DraggingIcons[eventData.pointerId] != null)
-			SetDraggedPosition(eventData);
-	}
+        image.sprite = GetComponent<Image>().sprite;
+        image.SetNativeSize();
 
-	private void SetDraggedPosition(PointerEventData eventData)
-	{
-		
-		var rt = m_DraggingIcons[eventData.pointerId].GetComponent<RectTransform>();
-		Vector3 globalMousePos;
-		if (RectTransformUtility.ScreenPointToWorldPointInRectangle(m_DraggingPlanes[eventData.pointerId], eventData.position, eventData.pressEventCamera, out globalMousePos))
-		{
-			rt.position = globalMousePos;
-			rt.rotation = m_DraggingPlanes[eventData.pointerId].rotation;
-		}
-	}
+        m_DraggingPlanes[eventData.pointerId] = canvas.transform as RectTransform;
 
-	public void OnEndDrag(PointerEventData eventData)
-	{
-		if (m_DraggingIcons[eventData.pointerId] != null)
-			Destroy(m_DraggingIcons[eventData.pointerId]);
+        SetDraggedPosition(eventData);
+    }
 
-		m_DraggingIcons[eventData.pointerId] = null;
-	}
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (m_DraggingIcons[eventData.pointerId] != null)
+            SetDraggedPosition(eventData);
+    }
 
-	static public T FindInParents<T>(GameObject go) where T : Component
-	{
-		if (go == null) return null;
-		var comp = go.GetComponent<T>();
+    private void SetDraggedPosition(PointerEventData eventData)
+    {
+        var rt = m_DraggingIcons[eventData.pointerId].GetComponent<RectTransform>();
+        Vector3 globalMousePos;
+        if (RectTransformUtility.ScreenPointToWorldPointInRectangle(m_DraggingPlanes[eventData.pointerId],
+            eventData.position, eventData.pressEventCamera, out globalMousePos))
+        {
+            rt.position = globalMousePos;
+            rt.rotation = m_DraggingPlanes[eventData.pointerId].rotation;
+        }
+    }
 
-		if (comp != null)
-			return comp;
-		
-		var t = go.transform.parent;
-		while (t != null && comp == null)
-		{
-			comp = t.gameObject.GetComponent<T>();
-			t = t.parent;
-		}
-		return comp;
-	}
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (m_DraggingIcons[eventData.pointerId] != null)
+            Destroy(m_DraggingIcons[eventData.pointerId]);
+
+        m_DraggingIcons[eventData.pointerId] = null;
+    }
+
+    static public T FindInParents<T>(GameObject go) where T : Component
+    {
+        if (go == null) return null;
+        var comp = go.GetComponent<T>();
+
+        if (comp != null)
+            return comp;
+
+        var t = go.transform.parent;
+        while (t != null && comp == null)
+        {
+            comp = t.gameObject.GetComponent<T>();
+            t = t.parent;
+        }
+        return comp;
+    }
 }
