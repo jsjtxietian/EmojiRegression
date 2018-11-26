@@ -52,7 +52,7 @@ public class EmojiAdder : MonoBehaviour
                     bg.GetComponent<Image>().sprite = OrangeCircle.sprite;
                     circle.GetComponent<Image>().color = new Color(1, 1, 1, 1);
                     emojiSelf.GetComponent<Image>().color = new Color(1, 1, 1, 1);
-                    emojiSelf.GetComponent<DragMe>().enabled = false;
+                    //emojiSelf.GetComponent<DragMe>().enabled = false;
                     break;
                 case State.Train:
                     bg.SetActive(true);
@@ -73,7 +73,7 @@ public class EmojiAdder : MonoBehaviour
     private IEnumerator EndDrag(GameObject e)
     {
         yield return new WaitForSeconds(0.1f);
-        e.GetComponent<DragMe>().enabled = false;
+        //e.GetComponent<DragMe>().enabled = false;
     }
 
 }

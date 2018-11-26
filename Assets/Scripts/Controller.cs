@@ -152,11 +152,11 @@ public class Controller : MonoBehaviour
             len++;
         }
 
-        //double[] Para = MultiLine(arrX, arrY, len, len - 1);
-        //float result = (float) GetResultFloatLabel(Para, label, len - 1);
+        double[] Para = MultiLine(arrX, arrY, len, len - 1);
+        float result = (float)GetResultFloatLabel(Para, label, len - 1);
 
-        double[] Para = MultiLine(arrX, arrY, len, 2);
-        float result = (float) GetResultFloatLabel(Para, label, 2);
+        //double[] Para = MultiLine(arrX, arrY, len, 2);
+        //float result = (float) GetResultFloatLabel(Para, label, 2);
 
         result = DropMeArrow.GetWorldX(result);
 
