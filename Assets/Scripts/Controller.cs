@@ -91,7 +91,7 @@ public class Controller : MonoBehaviour
             TrainingUI.SetActive(true);
             var text = TrainingUI.transform.GetChild(2).gameObject.GetComponent<Text>();
             text.text = "";
-            text.DOText("......", TrainingTime);
+            text.DOText("...", TrainingTime);
             StartCoroutine(EndTrain());
         }
     }
@@ -152,8 +152,11 @@ public class Controller : MonoBehaviour
             len++;
         }
 
-        double[] Para = MultiLine(arrX, arrY, len, len - 1);
-        float result = (float) GetResultFloatLabel(Para, label, len - 1);
+        //double[] Para = MultiLine(arrX, arrY, len, len - 1);
+        //float result = (float) GetResultFloatLabel(Para, label, len - 1);
+
+        double[] Para = MultiLine(arrX, arrY, len, 2);
+        float result = (float) GetResultFloatLabel(Para, label, 2);
 
         result = DropMeArrow.GetWorldX(result);
 
