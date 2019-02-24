@@ -117,7 +117,7 @@ public class TwoController : MonoBehaviour
 
                     newMask.transform.position = new Vector3(pos.x, pos.y, 0);
                     newMask.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
-
+                    newMask.GetComponent<ChangeClusterName>().ClusterIndex = Clusters.Count-1;
                     Masks.Add(newMask);
                 }
             }
@@ -149,8 +149,15 @@ public class TwoController : MonoBehaviour
             NearestEmoji.Add(distances[i].index);
             Emojis[NearestEmoji[i]].transform.localScale = new Vector3(1.5f,1.5f,1);
         }
+
+        //calculate belongs to which one
+        //todo
     }
 
+    public void RenameCluster(int index , string name)
+    {
+        Clusters[index].ChangeName(name);
+    }
     private int CountInBox(Vector3 start, Vector3 end )
     {
         int count = 0;
@@ -188,38 +195,38 @@ public class TwoController : MonoBehaviour
                && (pos.y < bgPos.x + bgRect.height * scale / 2);
     }
 
-    //void OnGUI()
-    //{
-    //    //画线这种操作推荐在OnPostRender（）里进行 而不是直接放在Update，所以需要标志来开启
-    //    if (drawRectangle)
-    //    {
-    //        Vector3 end = Input.mousePosition; //鼠标当前位置
-    //        GL.PushMatrix(); //保存摄像机变换矩阵
-    //        GL.LoadPixelMatrix(); //设置用屏幕坐标绘图
+    void OnGUI()
+    {
+        //画线这种操作推荐在OnPostRender（）里进行 而不是直接放在Update，所以需要标志来开启
+        if (drawRectangle)
+        {
+            Vector3 end = Input.mousePosition; //鼠标当前位置
+            GL.PushMatrix(); //保存摄像机变换矩阵
+            GL.LoadPixelMatrix(); //设置用屏幕坐标绘图
 
-    //        GL.Begin(GL.QUADS);
-    //        GL.Color(new Color(255, 1, 1, 0.3f)); //设置颜色和透明度，方框内部透明
-    //        GL.Vertex3(start.x, start.y, 0);
-    //        GL.Vertex3(end.x, start.y, 0);
-    //        GL.Vertex3(end.x, end.y, 0);
-    //        GL.Vertex3(start.x, end.y, 0);
-    //        GL.End();
+            GL.Begin(GL.QUADS);
+            GL.Color(new Color(255, 1, 1, 0.3f)); //设置颜色和透明度，方框内部透明
+            GL.Vertex3(start.x, start.y, 0);
+            GL.Vertex3(end.x, start.y, 0);
+            GL.Vertex3(end.x, end.y, 0);
+            GL.Vertex3(start.x, end.y, 0);
+            GL.End();
 
-    //        GL.Begin(GL.LINES);
-    //        GL.Color(new Color(255, 255, 255, 1f)); //设置方框的边框颜色 边框不透明
-    //        GL.Vertex3(start.x, start.y, 0);
-    //        GL.Vertex3(end.x, start.y, 0);
-    //        GL.Vertex3(end.x, start.y, 0);
-    //        GL.Vertex3(end.x, end.y, 0);
-    //        GL.Vertex3(end.x, end.y, 0);
-    //        GL.Vertex3(start.x, end.y, 0);
-    //        GL.Vertex3(start.x, end.y, 0);
-    //        GL.Vertex3(start.x, start.y, 0);
-    //        GL.End();
+            GL.Begin(GL.LINES);
+            GL.Color(new Color(255, 255, 255, 1f)); //设置方框的边框颜色 边框不透明
+            GL.Vertex3(start.x, start.y, 0);
+            GL.Vertex3(end.x, start.y, 0);
+            GL.Vertex3(end.x, start.y, 0);
+            GL.Vertex3(end.x, end.y, 0);
+            GL.Vertex3(end.x, end.y, 0);
+            GL.Vertex3(start.x, end.y, 0);
+            GL.Vertex3(start.x, end.y, 0);
+            GL.Vertex3(start.x, start.y, 0);
+            GL.End();
 
-    //        GL.PopMatrix(); //恢复摄像机投影矩阵
-    //    }
-    //}
+            GL.PopMatrix(); //恢复摄像机投影矩阵
+        }
+    }
 }
 
 public struct SingleEmojiInfo
@@ -241,7 +248,7 @@ public struct SingleEmojiInfo
     }
 }
 
-public struct ClusterInfo
+public class ClusterInfo
 {
     public List<SingleEmojiInfo> Contains ;
     public string Name;
@@ -250,6 +257,12 @@ public struct ClusterInfo
         Name = name;
         Contains = new List<SingleEmojiInfo>();
     }
+
+    public void ChangeName(string name)
+    {
+        Name = name;
+    }
+
 }
 
 public struct Distance
