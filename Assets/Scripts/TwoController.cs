@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,6 +27,8 @@ public class TwoController : MonoBehaviour
     private List<ClusterInfo> Clusters = new List<ClusterInfo>();
     private List<GameObject> Emojis = new List<GameObject>();
     private List<GameObject> Masks = new List<GameObject>();
+
+    private List<int> NearestEmoji = new List<int>();
 
     // Use this for initialization
     void Start()
@@ -121,12 +124,31 @@ public class TwoController : MonoBehaviour
         }
     }
 
-    private Vector2 GetWorldPosByCoor(float x, float y)
+    public void ResetTestState()
     {
-        var pos = Transforms[0].position;
-        float xP = FirstCoor[0] + FirstCoor[2] * x;
-        float yP = FirstCoor[1] + FirstCoor[3] * (y - 10);
-        return new Vector2(pos.x + xP,pos.y + yP);
+        foreach (var index in NearestEmoji)
+        {
+            Emojis[index].transform.localScale = new Vector3(1,1,1);
+        }
+
+        NearestEmoji.Clear();
+    }
+
+    public void OnEmojiTest(float x , float y)
+    {
+        List<Distance> distances = new List<Distance>();
+        for (int i = 0; i < EmojiInfos.Count; i++)
+        {
+            distances.Add(new Distance(
+                (float)Math.Pow(x - EmojiInfos[i].x, 2) + (float)Math.Pow(y - EmojiInfos[i].y, 2),i));
+        }    
+
+        distances = distances.OrderBy(e => e.distance).ToList();
+        for (int i = 0; i < 5; i++)
+        {
+            NearestEmoji.Add(distances[i].index);
+            Emojis[NearestEmoji[i]].transform.localScale = new Vector3(1.5f,1.5f,1);
+        }
     }
 
     private int CountInBox(Vector3 start, Vector3 end )
@@ -227,5 +249,17 @@ public struct ClusterInfo
     {
         Name = name;
         Contains = new List<SingleEmojiInfo>();
+    }
+}
+
+public struct Distance
+{
+    public float distance;
+    public int index;
+
+    public Distance(float _d, int _i)
+    {
+        distance = _d;
+        index = _i;
     }
 }
