@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class TwoController : MonoBehaviour
@@ -148,18 +149,18 @@ public class TwoController : MonoBehaviour
         }
 
         distances = distances.OrderBy(e => e.distance).ToList();
-        Dictionary<int, int> Belongs = new Dictionary<int, int>();
+
+        int []Belongs = new int[50];
 
         for (int i = 0; i < 3; i++)
         {
             NearestEmoji.Add(distances[i].index);
             Emojis[NearestEmoji[i]].transform.localScale = new Vector3(1.5f, 1.5f, 1);
-            Belongs[NearestEmoji[i]] = EmojiInfos[NearestEmoji[i]].belong;
+            Belongs[EmojiInfos[NearestEmoji[i]].belong] ++ ;
         }
 
         //calculate belongs to which one
-        //todo
-        int belong = Belongs.OrderByDescending(e => e.Value).FirstOrDefault().Value;
+        int belong = Array.FindIndex(Belongs, val => val == Belongs.Max());
         if (belong != -1)
         {
             TestEmojis[index].transform.GetChild(0).gameObject.SetActive(true);
@@ -242,7 +243,37 @@ public class TwoController : MonoBehaviour
             GL.PopMatrix(); //恢复摄像机投影矩阵
         }
     }
+
+    public void Redo()
+    {
+        int index = Clusters.Count - 1;
+
+        if (index < 0)
+        {
+            return;
+        }
+
+        Destroy(Masks[index]);
+        Masks.RemoveAt(index);
+
+        foreach (var c in Clusters[index].Contains)
+        {
+            c.index = -1;
+        }
+        Clusters.RemoveAt(index);
+    }
+
+    public void ReSet()
+    {
+        SceneManager.LoadScene("TwoDemension");
+    }
+
+    public void Train()
+    {
+        
+    }
 }
+
 
 public class SingleEmojiInfo
 {
