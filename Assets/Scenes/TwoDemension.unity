@@ -295,7 +295,7 @@ PrefabInstance:
     - target: {fileID: 1078454247795213481, guid: fbf3975ff2e6bd241a005c6943faae3c,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -804.3
+      value: 837.4
       objectReference: {fileID: 0}
     - target: {fileID: 1078454247795213481, guid: fbf3975ff2e6bd241a005c6943faae3c,
         type: 3}
@@ -405,8 +405,8 @@ MonoBehaviour:
   FirstCoor:
   - 8
   - 18
-  - 85.5
-  - 82.115
+  - 86
+  - 82.17
   TestEmojiFather: {fileID: 1587694540}
 --- !u!1 &286786294
 GameObject:

@@ -24,9 +24,11 @@ public class TwoController : MonoBehaviour
 
     //self Info
     private List<SingleEmojiInfo> EmojiInfos = new List<SingleEmojiInfo>();
+
     private List<ClusterInfo> Clusters = new List<ClusterInfo>();
     private List<GameObject> Emojis = new List<GameObject>();
     private List<GameObject> Masks = new List<GameObject>();
+    private List<GameObject> TestEmojis = new List<GameObject>();
 
     private List<int> NearestEmoji = new List<int>();
 
@@ -57,7 +59,7 @@ public class TwoController : MonoBehaviour
 
             xP = newObject.transform.position.x;
             yP = newObject.transform.position.y;
-            EmojiInfos.Add(new SingleEmojiInfo(i,xc, yc, xP, yP));
+            EmojiInfos.Add(new SingleEmojiInfo(i, xc, yc, xP, yP));
             Emojis.Add(newObject);
         }
 
@@ -78,7 +80,9 @@ public class TwoController : MonoBehaviour
 
             newObject.GetComponent<ClickToMove>().Coors = FirstCoor;
             newObject.GetComponent<ClickToMove>().EmojiFather = Transforms[0];
-            newObject.GetComponent<ClickToMove>().Self = new SingleEmojiInfo(i,xc,yc,0,0);
+            newObject.GetComponent<ClickToMove>().Self = new SingleEmojiInfo(i, xc, yc, 0, 0);
+
+            TestEmojis.Add(newObject);
         }
     }
 
@@ -91,8 +95,8 @@ public class TwoController : MonoBehaviour
         {
             if (WithinBG(Input.mousePosition))
             {
-                drawRectangle = true; 
-                start = Input.mousePosition; 
+                drawRectangle = true;
+                start = Input.mousePosition;
             }
         }
         else if (Input.GetMouseButtonUp(0))
@@ -117,7 +121,7 @@ public class TwoController : MonoBehaviour
 
                     newMask.transform.position = new Vector3(pos.x, pos.y, 0);
                     newMask.GetComponent<RectTransform>().sizeDelta = new Vector2(width, height);
-                    newMask.GetComponent<ChangeClusterName>().ClusterIndex = Clusters.Count-1;
+                    newMask.GetComponent<ChangeClusterName>().ClusterIndex = Clusters.Count - 1;
                     Masks.Add(newMask);
                 }
             }
@@ -128,37 +132,47 @@ public class TwoController : MonoBehaviour
     {
         foreach (var index in NearestEmoji)
         {
-            Emojis[index].transform.localScale = new Vector3(1,1,1);
+            Emojis[index].transform.localScale = new Vector3(1, 1, 1);
         }
 
         NearestEmoji.Clear();
     }
 
-    public void OnEmojiTest(float x , float y)
+    public void OnEmojiTest(int index ,float x, float y)
     {
         List<Distance> distances = new List<Distance>();
         for (int i = 0; i < EmojiInfos.Count; i++)
         {
             distances.Add(new Distance(
-                (float)Math.Pow(x - EmojiInfos[i].x, 2) + (float)Math.Pow(y - EmojiInfos[i].y, 2),i));
-        }    
+                (float) Math.Pow(x - EmojiInfos[i].x, 2) + (float) Math.Pow(y - EmojiInfos[i].y, 2), i));
+        }
 
         distances = distances.OrderBy(e => e.distance).ToList();
-        for (int i = 0; i < 5; i++)
+        Dictionary<int, int> Belongs = new Dictionary<int, int>();
+
+        for (int i = 0; i < 3; i++)
         {
             NearestEmoji.Add(distances[i].index);
-            Emojis[NearestEmoji[i]].transform.localScale = new Vector3(1.5f,1.5f,1);
+            Emojis[NearestEmoji[i]].transform.localScale = new Vector3(1.5f, 1.5f, 1);
+            Belongs[NearestEmoji[i]] = EmojiInfos[NearestEmoji[i]].belong;
         }
 
         //calculate belongs to which one
         //todo
+        int belong = Belongs.OrderByDescending(e => e.Value).FirstOrDefault().Value;
+        if (belong != -1)
+        {
+            TestEmojis[index].transform.GetChild(0).gameObject.SetActive(true);
+            TestEmojis[index].GetComponentInChildren<Text>().text = Clusters[belong].Name;
+        }
     }
 
-    public void RenameCluster(int index , string name)
+    public void RenameCluster(int index, string name)
     {
         Clusters[index].ChangeName(name);
     }
-    private int CountInBox(Vector3 start, Vector3 end )
+
+    private int CountInBox(Vector3 start, Vector3 end)
     {
         int count = 0;
         Clusters.Add(new ClusterInfo("temp"));
@@ -169,13 +183,14 @@ public class TwoController : MonoBehaviour
                 && e.yCoor < start.y && e.yCoor > end.y)
             {
                 count++;
-                Clusters[Clusters.Count-1].Contains.Add(e);
+                e.belong = Clusters.Count - 1;
+                Clusters[Clusters.Count - 1].Contains.Add(e);
             }
         }
 
         if (count == 0)
         {
-            Clusters.RemoveAt(Clusters.Count-1);
+            Clusters.RemoveAt(Clusters.Count - 1);
         }
         return count;
     }
@@ -229,7 +244,7 @@ public class TwoController : MonoBehaviour
     }
 }
 
-public struct SingleEmojiInfo
+public class SingleEmojiInfo
 {
     public int index;
     public float x;
@@ -238,20 +253,29 @@ public struct SingleEmojiInfo
     public float xCoor;
     public float yCoor;
 
-    public SingleEmojiInfo(int i , float _x, float _y, float _xC, float _yC)
+    public int belong;
+
+    public SingleEmojiInfo(int i, float _x, float _y, float _xC, float _yC)
     {
         index = i;
         x = _x;
         y = _y;
         xCoor = _xC;
         yCoor = _yC;
+        belong = -1;
+    }
+
+    public void Reset()
+    {
+        belong = -1;
     }
 }
 
 public class ClusterInfo
 {
-    public List<SingleEmojiInfo> Contains ;
+    public List<SingleEmojiInfo> Contains;
     public string Name;
+
     public ClusterInfo(string name)
     {
         Name = name;
@@ -262,7 +286,6 @@ public class ClusterInfo
     {
         Name = name;
     }
-
 }
 
 public struct Distance

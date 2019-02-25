@@ -28,6 +28,6 @@ public class ClickToMove : MonoBehaviour, IPointerClickHandler
         gameObject.transform.DOLocalMove(new Vector3(xP, yP, 0), 1f);
         gameObject.transform.localScale = new Vector3(1f,1f,1f);
 
-        Controller.OnEmojiTest(Self.x,Self.y);
+        Controller.OnEmojiTest(Self.index, Self.x,Self.y);
     }
 }
