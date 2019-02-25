@@ -129,7 +129,7 @@ public class TwoController : MonoBehaviour
         }
     }
 
-    public void ResetTestState()
+    public bool ResetTestState()
     {
         foreach (var index in NearestEmoji)
         {
@@ -137,6 +137,8 @@ public class TwoController : MonoBehaviour
         }
 
         NearestEmoji.Clear();
+
+        return Clusters.Count > 0;
     }
 
     public void OnEmojiTest(int index ,float x, float y)
@@ -156,15 +158,27 @@ public class TwoController : MonoBehaviour
         {
             NearestEmoji.Add(distances[i].index);
             Emojis[NearestEmoji[i]].transform.localScale = new Vector3(1.5f, 1.5f, 1);
-            Belongs[EmojiInfos[NearestEmoji[i]].belong] ++ ;
+            if (EmojiInfos[NearestEmoji[i]].belong == -1)
+            {
+                Belongs[49]++;
+            }
+            else
+            {
+                Belongs[EmojiInfos[NearestEmoji[i]].belong] ++ ;
+            }
         }
 
         //calculate belongs to which one
         int belong = Array.FindIndex(Belongs, val => val == Belongs.Max());
-        if (belong != -1)
+        TestEmojis[index].transform.GetChild(0).gameObject.SetActive(true);
+
+        if (belong != 49)
         {
-            TestEmojis[index].transform.GetChild(0).gameObject.SetActive(true);
             TestEmojis[index].GetComponentInChildren<Text>().text = Clusters[belong].Name;
+        }
+        else
+        {
+            TestEmojis[index].GetComponentInChildren<Text>().text = "Unclassfied";
         }
     }
 
